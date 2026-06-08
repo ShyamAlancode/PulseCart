@@ -83,6 +83,7 @@ export async function POST(request: Request) {
               imageUrl,
               sellerId,
               status: "SCHEDULED",
+              totalStock: Number(inventoryCount),
             },
           },
         },

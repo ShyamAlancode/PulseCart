@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { createOrder } from "@/lib/checkout";
+import { getInventory } from "@/lib/queries";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -36,12 +37,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3b. Fetch the product price from inventory
+    const inventory = await getInventory(dropId, productId);
+    if (!inventory) {
+      return NextResponse.json(
+        { error: "Not Found", message: "Product inventory details not found." },
+        { status: 404 }
+      );
+    }
+
     // 4. Execute checkout transaction
     const result = await createOrder({
       dropId,
       productId,
       userId: user.id,
       email: user.email || undefined,
+      price: inventory.price,
     });
 
     // 5. Check outcome and return status codes accordingly

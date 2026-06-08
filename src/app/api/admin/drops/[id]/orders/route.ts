@@ -17,7 +17,7 @@ export async function GET(
     const command = new QueryCommand({
       TableName: TABLE_NAME,
       IndexName: "GSI1",
-      KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK BEGINS_WITH :gsi1sk",
+      KeyConditionExpression: "GSI1PK = :gsi1pk AND begins_with(GSI1SK, :gsi1sk)",
       ExpressionAttributeValues: {
         ":gsi1pk": `DROP#${dropId}`,
         ":gsi1sk": "ORDER#",
