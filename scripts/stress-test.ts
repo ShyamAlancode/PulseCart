@@ -9,8 +9,21 @@ const PRODUCT_ID = "product-001";
 
 async function runStressTest() {
   const { createOrder } = await import("../src/lib/checkout");
+  // Reset inventory first
   const { docClient, TABLE_NAME } = await import("../src/lib/dynamodb");
   const { PutCommand } = await import("@aws-sdk/lib-dynamodb");
+  await docClient.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Item: {
+      PK: "DROP#drop-001",
+      SK: "INVENTORY#product-001",
+      availableCount: INVENTORY,
+      baseInventory: INVENTORY,
+      price: 1999,
+      sku: "AM-001-BLK",
+    }
+  }));
+  console.log(`Reset inventory to ${INVENTORY}`);
 
   console.log("==================================================");
   console.log("🚀 STARTING PULSECART HIGH-CONCURRENCY STRESS TEST");
@@ -19,28 +32,6 @@ async function runStressTest() {
   console.log(`Concurrent Requests:       ${CONCURRENT_REQUESTS}`);
   console.log(`Drop ID:                   ${DROP_ID}`);
   console.log(`Product ID:                ${PRODUCT_ID}`);
-  console.log("--------------------------------------------------");
-
-  console.log("Resetting local DynamoDB inventory back to 50...");
-  try {
-    await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: {
-          PK: `DROP#${DROP_ID}`,
-          SK: `INVENTORY#${PRODUCT_ID}`,
-          availableCount: INVENTORY,
-          baseInventory: INVENTORY,
-          price: 1999,
-          sku: "AM-001-BLK",
-        },
-      })
-    );
-    console.log("SUCCESS: Reset availableCount to 50.");
-  } catch (error) {
-    console.error("CRITICAL: Failed to reset inventory before test:", error);
-    process.exit(1);
-  }
   console.log("--------------------------------------------------");
 
   // 1. Generate 200 unique test user IDs

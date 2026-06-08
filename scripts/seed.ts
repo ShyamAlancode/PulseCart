@@ -62,6 +62,7 @@ async function main() {
               imageUrl: "https://placehold.co/600x400",
               sellerId: "seller-001",
               status: "SCHEDULED",
+              totalStock: 50,
             },
           },
         },
