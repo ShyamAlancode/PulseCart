@@ -16,7 +16,7 @@ export default function CreateDropModal() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [inventoryCount, setInventoryCount] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 

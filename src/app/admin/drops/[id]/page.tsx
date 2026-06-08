@@ -36,6 +36,174 @@ interface Order {
   email: string;
 }
 
+function RevenueLineChart({ orders }: { orders: Order[] }) {
+  if (orders.length === 0) return null;
+
+  // Sort orders oldest to newest
+  const sorted = [...orders].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  // Generate cumulative revenue series
+  let cumulative = 0;
+  const data = sorted.map((o) => {
+    cumulative += o.total;
+    return {
+      time: new Date(o.timestamp),
+      value: cumulative,
+      email: o.email,
+    };
+  });
+
+  const width = 600;
+  const height = 220;
+  const paddingLeft = 55;
+  const paddingRight = 25;
+  const paddingTop = 15;
+  const paddingBottom = 35;
+
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+
+  const times = data.map((d) => d.time.getTime());
+  const minTime = times[0];
+  const maxTime = times[times.length - 1];
+  const timeRange = maxTime - minTime || 1;
+
+  const values = data.map((d) => d.value);
+  const maxValue = Math.max(...values, 1);
+  const minValue = 0;
+  const valueRange = maxValue - minValue;
+
+  // Generate path points
+  const points = data.map((d) => {
+    const x = paddingLeft + ((d.time.getTime() - minTime) / timeRange) * chartWidth;
+    const y = paddingTop + chartHeight - ((d.value - minValue) / valueRange) * chartHeight;
+    return { x, y, ...d };
+  });
+
+  let pathD = "";
+  if (points.length > 0) {
+    pathD = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathD += ` L ${points[i].x} ${points[i].y}`;
+    }
+  }
+
+  // Path for fill under the line
+  const fillD = points.length > 0
+    ? `${pathD} L ${points[points.length - 1].x} ${paddingTop + chartHeight} L ${points[0].x} ${paddingTop + chartHeight} Z`
+    : "";
+
+  return (
+    <div className="glass p-6 rounded-2xl border border-white/5 space-y-4 bg-zinc-950/20 backdrop-blur-md">
+      <div>
+        <h3 className="font-extrabold text-white text-lg">Sales Velocity Growth</h3>
+        <p className="text-xs text-zinc-400">
+          Cumulative gross sales growth plotted chronologically across transactions
+        </p>
+      </div>
+      <div className="w-full overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines */}
+          {Array.from({ length: 4 }).map((_, i) => {
+            const y = paddingTop + (chartHeight / 3) * i;
+            const val = maxValue - (valueRange / 3) * i;
+            return (
+              <g key={i}>
+                <line
+                  x1={paddingLeft}
+                  y1={y}
+                  x2={width - paddingRight}
+                  y2={y}
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeDasharray="4 4"
+                />
+                <text
+                  x={paddingLeft - 10}
+                  y={y + 3}
+                  fill="rgba(255,255,255,0.4)"
+                  fontSize="9"
+                  textAnchor="end"
+                  className="font-mono"
+                >
+                  ₹{(val / 100).toFixed(2)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Fill under the curve */}
+          {fillD && <path d={fillD} fill="url(#chartGradient)" />}
+
+          {/* Line Path */}
+          {pathD && (
+            <path
+              d={pathD}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Data Points */}
+          {points.map((pt, i) => (
+            <g key={i} className="group cursor-pointer">
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r="3.5"
+                fill="#818cf8"
+                stroke="#a855f7"
+                strokeWidth="1.5"
+                className="transition-transform duration-200 hover:scale-150"
+              />
+              <title>
+                {`Time: ${pt.time.toLocaleTimeString()}\nRevenue: ₹${(pt.value / 100).toFixed(2)}\nBuyer: ${pt.email}`}
+              </title>
+            </g>
+          ))}
+
+          {/* X-axis time markings */}
+          {points.length > 0 && (
+            <>
+              <text
+                x={paddingLeft}
+                y={height - 10}
+                fill="rgba(255,255,255,0.4)"
+                fontSize="9"
+                textAnchor="start"
+                className="font-mono"
+              >
+                {points[0].time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </text>
+              <text
+                x={width - paddingRight}
+                y={height - 10}
+                fill="rgba(255,255,255,0.4)"
+                fontSize="9"
+                textAnchor="end"
+                className="font-mono"
+              >
+                {points[points.length - 1].time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </text>
+            </>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDropPage({
   params,
 }: {
@@ -229,6 +397,9 @@ export default function AdminDropPage({
           </div>
         </div>
       </div>
+
+      {/* Sales Velocity Chart */}
+      <RevenueLineChart orders={orders} />
 
       {/* Order Logs Table */}
       <div className="glass rounded-2xl border border-white/5 overflow-hidden">
