@@ -11,6 +11,7 @@ export interface DropMetadata {
   imageUrl: string;
   sellerId: string;
   status: string;
+  totalStock?: number;
 }
 
 export interface InventoryItem {
