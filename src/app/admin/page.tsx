@@ -64,7 +64,7 @@ export default async function AdminLandingPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Drops
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
               System Administration
             </h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 backdrop-blur-md uppercase tracking-wider">

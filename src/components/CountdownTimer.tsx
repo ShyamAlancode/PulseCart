@@ -11,7 +11,7 @@ function TimeSegment({ value, label, flash }: { value: string; label: string; fl
   return (
     <div className="flex flex-col items-center gap-0.5">
       <div className={`
-        bg-zinc-900 border border-zinc-850 rounded-xl 
+        bg-zinc-900 border border-zinc-800 rounded-xl 
         px-2.5 py-1.5 min-w-[44px] text-center
         shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]
         ${flash ? 'text-violet-300' : 'text-white'}

@@ -109,7 +109,7 @@ export default function BuyButton({
       )}
 
       {errorMessage && (
-        <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/20 text-red-400 text-xs font-semibold text-center animate-bounce">
+        <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/20 text-red-400 text-xs font-semibold text-center animate-fade-in duration-300">
           {errorMessage}
         </div>
       )}

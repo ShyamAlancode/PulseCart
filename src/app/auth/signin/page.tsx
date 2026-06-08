@@ -94,7 +94,7 @@ export default function SignInPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 mb-3">
             <Lock className="w-6 h-6 animate-pulse" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 via-indigo-300 to-indigo-500 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             Welcome to PulseCart
           </h1>
           <p className="text-sm text-zinc-400 mt-2">

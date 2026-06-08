@@ -107,7 +107,7 @@ export default async function SellerDashboardPage() {
       {/* Header and Trigger Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800/60 pb-6">
         <div className="space-y-1">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
             Creator Dashboard
           </h1>
           <p className="text-zinc-400 text-xs sm:text-sm">

@@ -35,12 +35,13 @@ export default function LiveInventory({
   }, [dropId, count]);
 
   useEffect(() => {
-    if (count < prevCount.current) {
+    const prev = prevCount.current;
+    prevCount.current = count;
+    if (count < prev) {
       setFlash(true);
       const timer = setTimeout(() => setFlash(false), 600);
       return () => clearTimeout(timer);
     }
-    prevCount.current = count;
   }, [count]);
 
   return (
