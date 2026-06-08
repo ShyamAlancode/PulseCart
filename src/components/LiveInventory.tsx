@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 interface LiveInventoryProps {
   dropId: string;
@@ -12,7 +12,8 @@ export default function LiveInventory({
   initialAvailableCount,
 }: LiveInventoryProps) {
   const [count, setCount] = useState(initialAvailableCount);
-  const [animate, setAnimate] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const prevCount = useRef(count);
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -21,9 +22,6 @@ export default function LiveInventory({
         if (res.ok) {
           const data = await res.json();
           if (data.availableCount !== undefined && data.availableCount !== count) {
-            if (data.availableCount < count) {
-              setAnimate(true);
-            }
             setCount(data.availableCount);
           }
         }
@@ -32,29 +30,29 @@ export default function LiveInventory({
       }
     };
 
-    const interval = setInterval(fetchInventory, 5000);
+    const interval = setInterval(fetchInventory, 3000);
     return () => clearInterval(interval);
   }, [dropId, count]);
 
   useEffect(() => {
-    if (animate) {
-      const timer = setTimeout(() => setAnimate(false), 800);
+    if (count < prevCount.current) {
+      setFlash(true);
+      const timer = setTimeout(() => setFlash(false), 600);
       return () => clearTimeout(timer);
     }
-  }, [animate]);
+    prevCount.current = count;
+  }, [count]);
 
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className={`text-sm font-black px-3 py-1.5 rounded-xl border transition-all duration-550 transform select-none ${
-          animate
-            ? "bg-red-500/20 text-red-500 border-red-500/40 scale-120 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
-            : count > 0
-            ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-            : "bg-red-500/10 text-red-400 border-red-500/20"
-        }`}
-      >
-        {count > 0 ? `${count} left` : "SOLD OUT"}
+    <div className="flex items-center gap-1.5 select-none">
+      <span className={`
+        font-black text-2xl tabular-nums transition-all duration-300 transform
+        ${flash ? 'text-red-400 scale-110' : count > 0 ? 'text-violet-400 scale-100' : 'text-red-500 scale-100'}
+      `}>
+        {count > 0 ? count : "0"}
+      </span>
+      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+        {count > 0 ? "left" : "SOLD OUT"}
       </span>
     </div>
   );

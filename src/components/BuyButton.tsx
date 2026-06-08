@@ -34,22 +34,19 @@ export default function BuyButton({
         body: JSON.stringify({ dropId, productId }),
       });
 
-      if (res.status === 200) {
+      if (res.ok) {
         const data = await res.json();
         router.push(`/order/${data.orderId}/success`);
         return;
       }
 
-      if (res.status === 409) {
-        const data = await res.json();
-        if (data.reason === "SOLD_OUT") {
-          setIsSoldOut(true);
-          return;
-        }
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409 || data.reason === "SOLD_OUT") {
+        setIsSoldOut(true);
+        return;
       }
 
-      // Default error fallback
-      setErrorMessage("Something went wrong. Try again.");
+      setErrorMessage(data.message || "Something went wrong. Try again.");
     } catch (err) {
       console.error("Error during checkout invocation:", err);
       setErrorMessage("Something went wrong. Try again.");
@@ -63,14 +60,18 @@ export default function BuyButton({
       <button
         onClick={handleBuy}
         disabled={disabled || loading || isSoldOut}
-        className={`w-full py-4 rounded-2xl font-black text-sm tracking-widest uppercase transition-all duration-500 select-none flex items-center justify-center gap-2 ${
+        className={`w-full py-4 rounded-2xl font-black text-sm tracking-widest uppercase transition-all duration-500 select-none flex items-center justify-center gap-2 group ${
           isSoldOut
             ? "bg-red-500/10 border border-red-500/35 text-red-400 cursor-not-allowed shadow-none"
             : disabled || loading
             ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-300 dark:border-zinc-700/50 cursor-not-allowed"
-            : "bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25 active:scale-[0.99] animate-pulse"
+            : "relative overflow-hidden bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-black tracking-widest shadow-[0_0_24px_rgba(124,58,237,0.4)] hover:shadow-[0_0_36px_rgba(124,58,237,0.6)] active:scale-[0.98] transition-all duration-200 ease-out"
         }`}
       >
+        <span 
+          className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 pointer-events-none"
+          aria-hidden="true"
+        />
         {loading ? (
           <>
             <svg

@@ -167,8 +167,46 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
               </div>
             </div>
 
+            {/* Sold progress bar — shows "47% claimed" */}
+            {inventoryItem && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-zinc-500">Claimed</span>
+                  <span className="text-violet-400">
+                    {inventoryItem.baseInventory > 0 
+                      ? Math.round(((inventoryItem.baseInventory - inventoryItem.availableCount) / inventoryItem.baseInventory) * 100) 
+                      : 0}% gone
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-zinc-900 border border-zinc-800/30 overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-1000 ease-out"
+                    style={{ 
+                      width: `${inventoryItem.baseInventory > 0 
+                        ? Math.round(((inventoryItem.baseInventory - inventoryItem.availableCount) / inventoryItem.baseInventory) * 100) 
+                        : 0}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Social proof ticker */}
+            {isLive && !isSoldOut && (
+              <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-semibold pt-1">
+                <span className="flex -space-x-1 select-none">
+                  {['bg-violet-500','bg-pink-500','bg-amber-500','bg-emerald-500'].map((c,i) => (
+                    <span key={i} className={`w-3.5 h-3.5 rounded-full border border-zinc-950 ${c}`} />
+                  ))}
+                </span>
+                <span>
+                  <span className="text-zinc-300 font-bold">29</span> people viewing this drop right now
+                </span>
+              </div>
+            )}
+
             {/* Countdown Banner */}
-            <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-800/60 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-zinc-400 font-semibold">
                 {!hasStarted ? "Launches In:" : hasEnded ? "Drop Ended:" : "Closes In:"}
               </span>
@@ -177,7 +215,7 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
                   COMPLETED
                 </span>
               ) : (
-                <CountdownTimer targetTime={countdownTarget} />
+                <CountdownTimer targetTime={countdownTarget} size="lg" />
               )}
             </div>
 

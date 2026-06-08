@@ -19,11 +19,18 @@ export default function HomePage() {
   return (
     <div className="space-y-8 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
       {/* Hero Header */}
-      <div className="space-y-4 text-center sm:text-left">
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-zinc-950 dark:text-white bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 dark:from-purple-400 dark:via-pink-505 dark:to-indigo-500 bg-clip-text text-transparent">
-          PulseCart Flash Drops
+      <div className="space-y-3 text-center sm:text-left">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-bold tracking-widest uppercase mx-auto sm:mx-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          Live Drops
+        </div>
+        <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-white leading-[1.05]">
+          PulseCart
+          <span className="block text-zinc-400 font-light text-2xl sm:text-3xl tracking-normal mt-1">
+            Flash Drops, Zero Oversell.
+          </span>
         </h1>
-        <p className="text-zinc-650 dark:text-zinc-400 max-w-2xl text-sm sm:text-base leading-relaxed">
+        <p className="text-zinc-400 max-w-2xl text-sm sm:text-base leading-relaxed pt-2">
           Exclusive limited-edition creator drops. Powered by AWS DynamoDB atomic transaction locks to ensure zero overselling.
         </p>
       </div>
