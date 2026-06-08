@@ -123,3 +123,16 @@ SUCCESS: Stress test passed successfully!
 
 ## Production Deployment Checklist
 For production deployment, see our comprehensive [AWS & Vercel Deployment Guide](DEPLOY.md).
+
+---
+
+## Architectural Tradeoffs & Decisions
+
+### 1. Distributed Inventory Counters (Sharding)
+To prevent hot partition bottlenecks (where DynamoDB limits a single partition to 1,000 WCUs/sec), PulseCart splits stock counts across `N = 10` distinct shard rows per product (e.g., `INVENTORY#<productId>#SHARD#0` to `9`). 
+- **Pros**: Scales WCU throughput up to `10,000 WCU/second`, handling extreme concurrent buyers without throttling.
+- **Cons**: Introduces small read aggregation latency since stock displays require querying and summing across all shards.
+
+### 2. Live Inventory Updates (SSE Polling vs. WebSockets)
+To keep the demonstration codebase and AWS architecture simple, PulseCart implements client-side polling.
+- **Tradeoff**: In a massive production deployment, WebSockets (powered by API Gateway WebSockets linked to DynamoDB Streams and Lambda) is preferred to avoid `O(N_users)` poll queries against the database. For this demo, client polling keeps the architecture diagram clean and focused on DynamoDB single-table consistency.

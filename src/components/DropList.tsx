@@ -24,7 +24,22 @@ async function getDropInventory(dropId: string) {
       },
     });
     const response = await docClient.send(command);
-    return response.Items?.[0] || null;
+    const items = response.Items || [];
+    if (items.length === 0) return null;
+
+    const aggregated = {
+      availableCount: 0,
+      baseInventory: 0,
+      price: items[0].price || 0,
+      SK: items[0].SK,
+    };
+
+    for (const item of items) {
+      aggregated.availableCount += item.availableCount || 0;
+      aggregated.baseInventory += item.baseInventory || 0;
+    }
+
+    return aggregated;
   } catch (error) {
     console.error(`Error querying inventory for drop ${dropId}:`, error);
     return null;

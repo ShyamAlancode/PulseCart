@@ -68,21 +68,34 @@ export async function getInventory(
   dropId: string,
   productId: string
 ): Promise<InventoryItem | null> {
-  const command = new GetCommand({
+  const command = new QueryCommand({
     TableName: TABLE_NAME,
-    Key: {
-      PK: `DROP#${dropId}`,
-      SK: `INVENTORY#${productId}`,
+    KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+    ExpressionAttributeValues: {
+      ":pk": `DROP#${dropId}`,
+      ":sk": `INVENTORY#${productId}`,
     },
   });
 
   try {
     const response = await docClient.send(command);
-    if (!response.Item) return null;
+    const items = response.Items || [];
+    if (items.length === 0) return null;
+
+    let availableCount = 0;
+    let price = 0;
+    let sku = "";
+
+    for (const item of items) {
+      availableCount += item.availableCount || 0;
+      price = item.price || price;
+      sku = item.sku || sku;
+    }
+
     return {
-      availableCount: response.Item.availableCount,
-      price: response.Item.price,
-      sku: response.Item.sku,
+      availableCount,
+      price,
+      sku,
     };
   } catch (error) {
     console.error(`Error in getInventory for dropId ${dropId}, productId ${productId}:`, error);
@@ -149,6 +162,7 @@ export async function getDropOrders(dropId: string): Promise<OrderItem[]> {
       ":gsi1pk": `DROP#${dropId}`,
       ":gsi1sk": "ORDER#",
     },
+    ScanIndexForward: false,
   });
 
   try {

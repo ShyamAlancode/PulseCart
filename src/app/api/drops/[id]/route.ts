@@ -30,24 +30,27 @@ export async function GET(
     }
 
     const metadataItem = items.find((item) => item.SK === "METADATA");
-    const inventoryItem = items.find((item) => item.SK.startsWith("INVENTORY#"));
+    const inventoryItems = items.filter((item) => item.SK.startsWith("INVENTORY#"));
 
     if (!metadataItem) {
       return NextResponse.json({ error: "Drop metadata not found" }, { status: 404 });
     }
+
+    const price = inventoryItems[0] ? inventoryItems[0].price : 0;
+    const availableCount = inventoryItems.reduce((sum, item) => sum + (item.availableCount || 0), 0);
 
     // Merge metadata details and inventory status
     const dropData = {
       id: dropId,
       title: metadataItem.title,
       description: metadataItem.description,
-      price: metadataItem.price,
+      price,
       imageUrl: metadataItem.imageUrl,
       startTime: metadataItem.startTime,
       endTime: metadataItem.endTime,
       status: metadataItem.status,
       totalStock: metadataItem.totalStock,
-      availableCount: inventoryItem ? inventoryItem.availableCount : 0,
+      availableCount,
     };
 
     return NextResponse.json(dropData);

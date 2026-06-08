@@ -66,55 +66,65 @@ export async function POST(request: Request) {
     const productId = nanoid();
     const createdAt = new Date().toISOString();
 
-    // 5. Execute 3-item atomic write transaction
+    // 5. Execute sharded atomic write transaction
+    const transactItems = [
+      {
+        // A. Drop Metadata
+        Put: {
+          TableName: TABLE_NAME,
+          Item: {
+            PK: `DROP#${dropId}`,
+            SK: "METADATA",
+            title,
+            description,
+            startTime,
+            endTime,
+            imageUrl,
+            sellerId,
+            status: "SCHEDULED",
+            totalStock: Number(inventoryCount),
+          },
+        },
+      },
+      {
+        // C. Seller Drop Link
+        Put: {
+          TableName: TABLE_NAME,
+          Item: {
+            PK: `SELLER#${sellerId}`,
+            SK: `DROP#${dropId}`,
+            title,
+            status: "SCHEDULED",
+            createdAt,
+          },
+        },
+      },
+    ];
+
+    // B. Distribute inventoryCount across 10 shards
+    const count = Number(inventoryCount);
+    const baseShare = Math.floor(count / 10);
+    const remainder = count % 10;
+
+    for (let shardId = 0; shardId < 10; shardId++) {
+      const shardStock = baseShare + (shardId < remainder ? 1 : 0);
+      transactItems.push({
+        Put: {
+          TableName: TABLE_NAME,
+          Item: {
+            PK: `DROP#${dropId}`,
+            SK: `INVENTORY#${productId}#SHARD#${shardId}`,
+            availableCount: shardStock,
+            baseInventory: shardStock,
+            price: Number(price),
+            sku: dropId,
+          },
+        },
+      } as any);
+    }
+
     const command = new TransactWriteCommand({
-      TransactItems: [
-        {
-          // A. Drop Metadata
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              PK: `DROP#${dropId}`,
-              SK: "METADATA",
-              title,
-              description,
-              startTime,
-              endTime,
-              imageUrl,
-              sellerId,
-              status: "SCHEDULED",
-              totalStock: Number(inventoryCount),
-            },
-          },
-        },
-        {
-          // B. Drop Inventory
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              PK: `DROP#${dropId}`,
-              SK: `INVENTORY#${productId}`,
-              availableCount: Number(inventoryCount),
-              baseInventory: Number(inventoryCount),
-              price: Number(price),
-              sku: dropId,
-            },
-          },
-        },
-        {
-          // C. Seller Drop Link
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              PK: `SELLER#${sellerId}`,
-              SK: `DROP#${dropId}`,
-              title,
-              status: "SCHEDULED",
-              createdAt,
-            },
-          },
-        },
-      ],
+      TransactItems: transactItems,
     });
 
     await docClient.send(command);

@@ -23,13 +23,14 @@ export async function GET(
     });
     
     const response = await docClient.send(command);
-    const item = response.Items?.[0];
+    const items = response.Items || [];
     
-    if (!item) {
+    if (items.length === 0) {
       return NextResponse.json({ error: "Inventory not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ availableCount: item.availableCount });
+    const totalAvailable = items.reduce((sum, item) => sum + (item.availableCount || 0), 0);
+    return NextResponse.json({ availableCount: totalAvailable });
   } catch (error: any) {
     console.error("Error fetching live inventory:", error);
     return NextResponse.json({ error: "Internal Server Error", message: error.message }, { status: 500 });

@@ -12,17 +12,19 @@ async function runStressTest() {
   // Reset inventory first
   const { docClient, TABLE_NAME } = await import("../src/lib/dynamodb");
   const { PutCommand } = await import("@aws-sdk/lib-dynamodb");
-  await docClient.send(new PutCommand({
-    TableName: TABLE_NAME,
-    Item: {
-      PK: "DROP#drop-001",
-      SK: "INVENTORY#product-001",
-      availableCount: INVENTORY,
-      baseInventory: INVENTORY,
-      price: 1999,
-      sku: "AM-001-BLK",
-    }
-  }));
+  for (let shardId = 0; shardId < 10; shardId++) {
+    await docClient.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        PK: "DROP#drop-001",
+        SK: `INVENTORY#product-001#SHARD#${shardId}`,
+        availableCount: 5,
+        baseInventory: 5,
+        price: 1999,
+        sku: "AM-001-BLK",
+      }
+    }));
+  }
   console.log(`Reset inventory to ${INVENTORY}`);
 
   console.log("==================================================");

@@ -66,18 +66,18 @@ async function main() {
             },
           },
         },
-        {
+        ...Array.from({ length: 10 }).map((_, shardId) => ({
           PutRequest: {
             Item: {
               PK: "DROP#drop-001",
-              SK: "INVENTORY#product-001",
-              availableCount: 50,
-              baseInventory: 50,
+              SK: `INVENTORY#product-001#SHARD#${shardId}`,
+              availableCount: 5,
+              baseInventory: 5,
               price: 1999,
               sku: "AM-001-BLK",
             },
           },
-        },
+        })),
         {
           PutRequest: {
             Item: {

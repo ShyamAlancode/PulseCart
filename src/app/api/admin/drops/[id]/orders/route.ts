@@ -22,6 +22,7 @@ export async function GET(
         ":gsi1pk": `DROP#${dropId}`,
         ":gsi1sk": "ORDER#",
       },
+      ScanIndexForward: false,
     });
 
     const response = await docClient.send(command);
