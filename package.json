@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx ts-node scripts/seed.ts",
-    "stress": "npx tsx scripts/stress-test.ts"
+    "seed": "npx tsx scripts/seed.ts",
+    "stress": "npx tsx scripts/seed.ts --reset && npx tsx scripts/stress-test.ts"
   },
   "dependencies": {
     "@auth/core": "^0.41.2",

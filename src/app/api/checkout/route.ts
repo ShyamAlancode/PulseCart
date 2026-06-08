@@ -64,10 +64,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Default error case
+    // Default error case (such as price mismatch or duplicate checkout)
     return NextResponse.json(
-      { success: false, reason: "ERROR" },
-      { status: 500 }
+      { success: false, reason: "ERROR", message: result.error || "An error occurred during checkout." },
+      { status: 400 }
     );
   } catch (error: any) {
     console.error("Critical error in POST /api/checkout:", error);

@@ -39,7 +39,7 @@ export async function createOrder({
     const command = new TransactWriteCommand({
       TransactItems: [
         {
-          // 1. Decrement inventory count on this shard if stock is available (> 0)
+          // 1. Decrement inventory count on this shard if stock is available (> 0) and price matches (TOCTOU race protection)
           Update: {
             TableName: TABLE_NAME,
             Key: {
@@ -47,10 +47,11 @@ export async function createOrder({
               SK: `INVENTORY#${productId}#SHARD#${shardId}`,
             },
             UpdateExpression: "SET availableCount = availableCount - :one",
-            ConditionExpression: "availableCount > :zero",
+            ConditionExpression: "availableCount > :zero AND price = :expectedPrice",
             ExpressionAttributeValues: {
               ":one": 1,
               ":zero": 0,
+              ":expectedPrice": price,
             },
           },
         },
@@ -72,6 +73,19 @@ export async function createOrder({
             },
           },
         },
+        {
+          // 3. Write an idempotency token to prevent duplicate checkout for this user + drop combination
+          Put: {
+            TableName: TABLE_NAME,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `IDEMPOTENCY#${dropId}`,
+              orderId,
+              timestamp,
+            },
+            ConditionExpression: "attribute_not_exists(PK)",
+          },
+        },
       ],
     });
 
@@ -81,10 +95,21 @@ export async function createOrder({
     } catch (error: any) {
       if (error.name === "TransactionCanceledException") {
         const reasons = error.CancellationReasons || [];
-        const inventoryFailed = reasons[0]?.Code === "ConditionalCheckFailed";
         
+        // Check for idempotency check failure first
+        const idempotencyFailed = reasons[2]?.Code === "ConditionalCheckFailed";
+        if (idempotencyFailed) {
+          return {
+            success: false,
+            reason: "ERROR",
+            error: "Duplicate checkout request detected. You have already purchased this item.",
+          };
+        }
+
+        const inventoryFailed = reasons[0]?.Code === "ConditionalCheckFailed";
         if (inventoryFailed) {
-          // Shard is empty, remove and try another shard
+          // Shard is empty or price mismatched.
+          // We remove the shard and try another shard (if price mismatched, all will fail and exit loop)
           candidateShards = candidateShards.filter((s) => s !== shardId);
           continue;
         }
@@ -96,6 +121,17 @@ export async function createOrder({
         error: error.message || "An unknown error occurred during transaction execution.",
       };
     }
+  }
+
+  // If we exhausted all shards, verify if it was a price change or actually sold out
+  const { getInventory } = await import("./queries");
+  const currentInventory = await getInventory(dropId, productId);
+  if (currentInventory && currentInventory.price !== price) {
+    return {
+      success: false,
+      reason: "ERROR",
+      error: `Price changed during checkout (expected ₹${(price / 100).toFixed(2)}, got ₹${(currentInventory.price / 100).toFixed(2)}). Please try again.`,
+    };
   }
 
   return { success: false, reason: "SOLD_OUT" };

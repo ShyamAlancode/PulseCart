@@ -28,7 +28,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const nameStr = (credentials.name as string) || "Guest Judge";
         
         // Deterministic role allocation based on email string
-        const role = emailStr.includes("admin") || emailStr.includes("judge") ? "ADMIN" : "buyer";
+        const role = emailStr.includes("admin") || emailStr.includes("judge")
+          ? "ADMIN"
+          : emailStr.includes("seller")
+          ? "seller"
+          : "buyer";
         
         return {
           id: emailStr.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase(),
@@ -61,7 +65,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!existingProfile.Item) {
-          const role = (user as any).role || (user.email.includes("admin") || user.email.includes("judge") ? "ADMIN" : "buyer");
+          const role = (user as any).role || (
+            user.email.includes("admin") || user.email.includes("judge")
+              ? "ADMIN"
+              : user.email.includes("seller")
+              ? "seller"
+              : "buyer"
+          );
           await docClient.send(
             new PutCommand({
               TableName: TABLE_NAME,

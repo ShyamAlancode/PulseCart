@@ -104,18 +104,15 @@ export async function getInventory(
 }
 
 /**
- * 3. getDropsByStatus: Scan with FilterExpression on status attribute
+ * 3. getDropsByStatus: Query GSI2 using status attribute as key
  */
 export async function getDropsByStatus(status: string): Promise<DropMetadata[]> {
-  const command = new ScanCommand({
+  const command = new QueryCommand({
     TableName: TABLE_NAME,
-    FilterExpression: "#status = :status AND SK = :sk",
-    ExpressionAttributeNames: {
-      "#status": "status",
-    },
+    IndexName: "GSI2",
+    KeyConditionExpression: "GSI2PK = :gsi2pk",
     ExpressionAttributeValues: {
-      ":status": status,
-      ":sk": "METADATA",
+      ":gsi2pk": status,
     },
   });
 

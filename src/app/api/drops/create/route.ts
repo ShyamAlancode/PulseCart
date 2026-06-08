@@ -83,6 +83,8 @@ export async function POST(request: Request) {
             sellerId,
             status: "SCHEDULED",
             totalStock: Number(inventoryCount),
+            GSI2PK: "SCHEDULED",
+            GSI2SK: startTime,
           },
         },
       },

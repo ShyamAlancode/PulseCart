@@ -26,7 +26,7 @@ export default function SignInPage() {
       setLoadingType(role);
       setErrorMsg("");
       
-      const callbackUrl = role === "ADMIN" ? "/seller" : "/";
+      const callbackUrl = role === "ADMIN" || role === "seller" ? "/seller" : "/";
       
       const result = await signIn("credentials", {
         email,
@@ -56,8 +56,12 @@ export default function SignInPage() {
       setLoadingType("custom");
       setErrorMsg("");
       
-      const role = customEmail.includes("admin") || customEmail.includes("judge") ? "ADMIN" : "BUYER";
-      const callbackUrl = role === "ADMIN" ? "/seller" : "/";
+      const role = customEmail.includes("admin") || customEmail.includes("judge")
+        ? "ADMIN"
+        : customEmail.includes("seller")
+        ? "seller"
+        : "buyer";
+      const callbackUrl = role === "ADMIN" || role === "seller" ? "/seller" : "/";
 
       const result = await signIn("credentials", {
         email: customEmail,
@@ -169,6 +173,27 @@ export default function SignInPage() {
           </button>
 
           <button
+            onClick={() => handleQuickSignIn("alpha-seller@pulsecart.seller", "Alpha Seller", "seller")}
+            disabled={loadingType !== null}
+            className="group flex items-center justify-between text-left bg-gradient-to-r from-emerald-950/20 to-zinc-950 hover:from-emerald-950/30 hover:to-zinc-900 border border-emerald-500/20 hover:border-emerald-500/40 py-2.5 px-4 rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <Shield className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-200">Alpha Creator (Seller)</div>
+                <div className="text-[10px] text-zinc-400">Syncs creator profile to DynamoDB</div>
+              </div>
+            </div>
+            {loadingType === "seller" ? (
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+            ) : (
+              <ArrowRight className="w-4 h-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />
+            )}
+          </button>
+
+          <button
             onClick={() => handleQuickSignIn("guest-buyer@example.com", "Guest Buyer", "BUYER")}
             disabled={loadingType !== null}
             className="group flex items-center justify-between text-left bg-gradient-to-r from-indigo-950/20 to-zinc-950 hover:from-indigo-950/30 hover:to-zinc-900 border border-indigo-500/20 hover:border-indigo-500/40 py-2.5 px-4 rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50"
@@ -220,7 +245,7 @@ export default function SignInPage() {
               />
             </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              Add <code className="text-purple-400">admin</code> or <code className="text-purple-400">judge</code> to email for Admin role.
+              Add <code className="text-purple-400">admin/judge</code> for Admin role, or <code className="text-purple-400">seller</code> for Seller role.
             </p>
           </div>
 

@@ -59,14 +59,15 @@ export const handler: Handler<DynamoDBStreamEvent, { statusCode: number; body: s
         continue;
       }
 
-      // 4. Extract required fields: orderId, userId, dropId, total, timestamp
-      const orderId = item.SK.split("#")[1] || "unknown-order";
-      const userId = (item.PK && typeof item.PK === "string") ? item.PK.split("#")[1] : "unknown-user";
+      // 4. Extract required fields: orderId, userId, dropId, total, timestamp, buyer email
+      const orderId = item.SK.replace(/^ORDER#/, "") || "unknown-order";
+      const userId = (item.PK && typeof item.PK === "string") ? item.PK.replace(/^USER#/, "") : "unknown-user";
       const dropId = item.dropId || "unknown-drop";
       const total = item.total !== undefined ? Number(item.total) : 0;
       const timestamp = item.timestamp || new Date().toISOString();
+      const buyerEmail = item.email || "unknown@example.com";
 
-      console.log(`[StreamProcessor] Processing ORDER confirmation: OrderId=${orderId}, UserId=${userId}, DropId=${dropId}, Total=${total}`);
+      console.log(`[StreamProcessor] Processing ORDER confirmation: OrderId=${orderId}, UserId=${userId}, DropId=${dropId}, Total=${total}, BuyerEmail=${buyerEmail}`);
 
       // 5. Send order confirmation email using SES
       const fromEmail = process.env.FROM_EMAIL;
@@ -77,7 +78,7 @@ export const handler: Handler<DynamoDBStreamEvent, { statusCode: number; body: s
       const emailParams = {
         Source: fromEmail,
         Destination: {
-          ToAddresses: [fromEmail], // Placeholder recipient as requested
+          ToAddresses: [buyerEmail], // Dynamic recipient email
         },
         Message: {
           Subject: {

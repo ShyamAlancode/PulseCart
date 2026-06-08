@@ -27,20 +27,24 @@ graph TD
     Streams -- Event Source Mapping --> Lambda[AWS Lambda Email Worker]
     Lambda -- SendEmail --> SES[Amazon SES]
     Lambda -- Logs --> CloudWatch[Amazon CloudWatch]
+    Lambda -- Failure --> DLQ[SQS Dead Letter Queue]
+    SES -- Delivery --> Inbox[Buyer Inbox]
 ```
 
 ---
 
 ## DynamoDB Single-Table Schema Design
 
-PulseCart stores drop configurations, real-time inventory balances, seller relations, and orders inside a unified table `PulseCart` to ensure fast queries and transactional atomicity.
+PulseCart stores drop configurations, real-time inventory balances, seller relations, orders, and user profiles inside a unified table `PulseCart` to ensure fast queries and transactional atomicity.
 
-| Partition Key (PK) | Sort Key (SK) | GSI1PK (GSI1) | GSI1SK (GSI1) | Attributes | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `DROP#<dropId>` | `METADATA` | - | - | `title`, `description`, `imageUrl`, `startTime`, `endTime`, `status`, `totalStock` | Drop configurations & schedule. |
-| `DROP#<dropId>` | `INVENTORY#<productId>` | - | - | `availableCount`, `baseInventory`, `price`, `sku` | Active stock limits & pricing. |
-| `SELLER#<sellerId>` | `DROP#<dropId>` | - | - | `title`, `status`, `createdAt` | Seller inventory mapping. |
-| `USER#<userId>` | `ORDER#<orderId>` | `DROP#<dropId>` | `ORDER#<orderId>` | `dropId`, `productId`, `status`, `total`, `timestamp`, `email` | Confirmed order validation. |
+| Partition Key (PK) | Sort Key (SK) | GSI1PK (GSI1) | GSI1SK (GSI1) | GSI2PK (GSI2) | GSI2SK (GSI2) | Attributes | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `DROP#<dropId>` | `METADATA` | - | - | `<status>` | `<startTime>` | `title`, `description`, `imageUrl`, `totalStock` | Drop configuration & schedules, queryable by status using GSI2. |
+| `DROP#<dropId>` | `INVENTORY#<productId>#SHARD#<shardId>` | - | - | - | - | `availableCount`, `baseInventory`, `price`, `sku` | Distributed stock count shards (0-9) to prevent partition hotspots. |
+| `SELLER#<sellerId>` | `DROP#<dropId>` | - | - | - | - | `title`, `status`, `createdAt` | Creator relationship maps. |
+| `USER#<userId>` | `ORDER#<orderId>` | `DROP#<dropId>` | `ORDER#<timestamp>#<orderId>` | - | - | `dropId`, `productId`, `status`, `total`, `timestamp`, `email` | Order details, queryable chronologically using GSI1. |
+| `USER#<userId>` | `PROFILE` | - | - | - | - | `name`, `email`, `role`, `createdAt` | User configuration profiles and permissions. |
+| `USER#<userId>` | `IDEMPOTENCY#<dropId>` | - | - | - | - | `orderId`, `timestamp` | Composite token verifying that a user can place at most one order per drop. |
 
 ---
 
