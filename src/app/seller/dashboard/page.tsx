@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { auth } from "@/auth";
 import { getSellerDrops, getDrop, getDropOrders } from "@/lib/queries";
 import { docClient, TABLE_NAME } from "@/lib/dynamodb";
@@ -55,7 +56,7 @@ async function getDropInventory(dropId: string) {
 export default async function SellerDashboardPage() {
   // 1. Authenticate user
   const session = await auth();
-  const user = session?.user as any;
+  const user = session?.user as { id?: string; role?: string } | undefined;
 
   if (!user || !user.id) {
     redirect("/api/auth/signin");
@@ -135,7 +136,6 @@ export default async function SellerDashboardPage() {
         // Grid Display
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dropsData.map((drop) => {
-            const hasMeta = !!drop.metadata;
             const title = drop.metadata?.title || drop.sellerDropTitle;
             const startTime = drop.metadata?.startTime;
             const endTime = drop.metadata?.endTime;
@@ -177,10 +177,13 @@ export default async function SellerDashboardPage() {
                   {/* Card Image */}
                   <div className="relative aspect-video w-full overflow-hidden bg-zinc-950/80 border-b border-zinc-800/50">
                     {imageUrl ? (
-                      <img
+                      <Image
                         src={imageUrl}
                         alt={title}
                         className="object-cover w-full h-full"
+                        width={400}
+                        height={225}
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600 font-mono text-[10px]">

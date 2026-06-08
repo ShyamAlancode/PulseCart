@@ -7,7 +7,14 @@ import ThemeToggle from "./ThemeToggle";
 import { Menu, X, LogOut, ShoppingBag } from "lucide-react";
 
 interface NavbarProps {
-  session: any;
+  session: {
+    user?: {
+      id?: string;
+      email?: string | null;
+      name?: string | null;
+      role?: string;
+    };
+  } | null;
 }
 
 export default function Navbar({ session }: NavbarProps) {

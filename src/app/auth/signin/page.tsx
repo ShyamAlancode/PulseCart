@@ -15,7 +15,7 @@ export default function SignInPage() {
       setLoadingType("google");
       setErrorMsg("");
       await signIn("google", { callbackUrl: "/" });
-    } catch (err: any) {
+    } catch {
       setErrorMsg("Google Sign-In failed. Please try credentials instead.");
       setLoadingType(null);
     }
@@ -33,13 +33,13 @@ export default function SignInPage() {
         name,
         redirect: true,
         callbackUrl,
-      }) as any;
+      }) as unknown as { error?: string } | undefined;
 
       if (result?.error) {
         setErrorMsg("Failed to authenticate. Try again.");
         setLoadingType(null);
       }
-    } catch (err) {
+    } catch {
       setErrorMsg("Something went wrong during sign-in.");
       setLoadingType(null);
     }
@@ -68,13 +68,13 @@ export default function SignInPage() {
         name: customName || "Custom User",
         redirect: true,
         callbackUrl,
-      }) as any;
+      }) as unknown as { error?: string } | undefined;
 
       if (result?.error) {
         setErrorMsg("Authentication failed. Please verify fields.");
         setLoadingType(null);
       }
-    } catch (err) {
+    } catch {
       setErrorMsg("Error submitting custom credentials.");
       setLoadingType(null);
     }

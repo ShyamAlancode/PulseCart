@@ -32,8 +32,9 @@ async function ensureTableExists() {
       throw { name: "ResourceNotFoundException" };
     }
     console.log(`Table ${TABLE_NAME} exists and is configured correctly.`);
-  } catch (error: any) {
-    if (error.name === "ResourceNotFoundException") {
+  } catch (error) {
+    const err = error as { name?: string };
+    if (err.name === "ResourceNotFoundException") {
       console.log(`Table ${TABLE_NAME} does not exist or was deleted. Creating it...`);
       const createCommand = new CreateTableCommand({
         TableName: TABLE_NAME,

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDropsByStatus } from "@/lib/queries";
@@ -25,7 +26,7 @@ export const revalidate = 0;
 export default async function AdminLandingPage() {
   // 1. Authenticate user as admin
   const session = await auth();
-  const user = session?.user as any;
+  const user = session?.user as { id?: string; role?: string } | undefined;
 
   if (!user || !user.id) {
     redirect("/api/auth/signin");
@@ -104,10 +105,13 @@ export default async function AdminLandingPage() {
                 <div>
                   <div className="relative aspect-video w-full overflow-hidden bg-zinc-950/80 border-b border-zinc-800/50">
                     {drop.imageUrl ? (
-                      <img
+                      <Image
                         src={drop.imageUrl}
                         alt={drop.title}
                         className="object-cover w-full h-full"
+                        width={400}
+                        height={225}
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600 font-mono text-[10px]">

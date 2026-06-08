@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     // 1. Get session and check role
     const session = await auth();
-    const user = session?.user as any;
+    const user = session?.user as { id?: string; role?: string } | undefined;
     const role = user?.role;
 
     // Support both "seller" and "ADMIN" (for testing sandbox credentials)
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     let body;
     try {
       body = await request.json();
-    } catch (err) {
+    } catch {
       return NextResponse.json(
         { error: "Bad Request", message: "Invalid JSON body." },
         { status: 400 }
@@ -67,7 +67,12 @@ export async function POST(request: Request) {
     const createdAt = new Date().toISOString();
 
     // 5. Execute sharded atomic write transaction
-    const transactItems = [
+    const transactItems: Array<{
+      Put: {
+        TableName: string;
+        Item: Record<string, string | number | undefined>;
+      };
+    }> = [
       {
         // A. Drop Metadata
         Put: {
@@ -122,7 +127,7 @@ export async function POST(request: Request) {
             sku: dropId,
           },
         },
-      } as any);
+      });
     }
 
     const command = new TransactWriteCommand({
@@ -136,10 +141,11 @@ export async function POST(request: Request) {
       { success: true, dropId, productId },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating drop:", error);
+    const errMessage = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json(
-      { success: false, error: "Internal Server Error", message: error.message },
+      { success: false, error: "Internal Server Error", message: errMessage },
       { status: 500 }
     );
   }

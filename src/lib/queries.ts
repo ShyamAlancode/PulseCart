@@ -1,5 +1,5 @@
 import { docClient, TABLE_NAME } from "./dynamodb";
-import { GetCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 export interface DropMetadata {
   PK: string;

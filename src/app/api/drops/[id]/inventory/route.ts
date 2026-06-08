@@ -31,8 +31,9 @@ export async function GET(
 
     const totalAvailable = items.reduce((sum, item) => sum + (item.availableCount || 0), 0);
     return NextResponse.json({ availableCount: totalAvailable });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching live inventory:", error);
-    return NextResponse.json({ error: "Internal Server Error", message: error.message }, { status: 500 });
+    const errMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: "Internal Server Error", message: errMessage }, { status: 500 });
   }
 }

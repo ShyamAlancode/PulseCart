@@ -2,7 +2,7 @@ import { auth } from "./auth";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const userRole = (req.auth?.user as any)?.role;
+  const userRole = (req.auth?.user as { role?: string } | undefined)?.role;
   const { nextUrl } = req;
 
   const isSellerRoute = nextUrl.pathname.startsWith("/seller");

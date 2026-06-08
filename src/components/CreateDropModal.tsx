@@ -97,7 +97,7 @@ export default function CreateDropModal() {
 
       setOpen(false);
       router.refresh();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error creating drop:", err);
       setError("A connection error occurred. Please try again.");
     } finally {

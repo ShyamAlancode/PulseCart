@@ -5,10 +5,11 @@ import Link from "next/link";
 
 export default async function OrdersPage() {
   const session = await auth();
-  const user = session?.user as any;
-  if (!user?.id) redirect("/auth/signin");
+  const user = session?.user as { id?: string; email?: string | null; role?: string } | undefined;
+  const userId = user?.id;
+  if (!userId) redirect("/auth/signin");
 
-  const orders = await getUserOrders(user.id);
+  const orders = await getUserOrders(userId);
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6 text-zinc-100">

@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     // 1. Get user session
     const session = await auth();
-    const user = session?.user as any;
+    const user = session?.user as { id?: string; email?: string | null; role?: string } | undefined;
     
     if (!user || !user.id) {
       return NextResponse.json(
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     let body;
     try {
       body = await request.json();
-    } catch (err) {
+    } catch {
       return NextResponse.json(
         { error: "Bad Request", message: "Invalid JSON body." },
         { status: 400 }
@@ -69,10 +69,11 @@ export async function POST(request: Request) {
       { success: false, reason: "ERROR", message: result.error || "An error occurred during checkout." },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Critical error in POST /api/checkout:", error);
+    const errMessage = error instanceof Error ? error.message : "Internal server error.";
     return NextResponse.json(
-      { success: false, reason: "ERROR", message: error.message || "Internal server error." },
+      { success: false, reason: "ERROR", message: errMessage },
       { status: 500 }
     );
   }

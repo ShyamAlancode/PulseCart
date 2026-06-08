@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getDrop } from "@/lib/queries";
 import { docClient, TABLE_NAME } from "@/lib/dynamodb";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -9,11 +10,8 @@ import InventorySkeleton from "@/components/InventorySkeleton";
 import BuyButton from "@/components/BuyButton";
 import {
   Card,
-  CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 
 export const revalidate = 0;
@@ -119,10 +117,13 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
         {/* Left Aspect: Product Media */}
         <div className="md:col-span-7 space-y-4">
           <div className="overflow-hidden rounded-3xl border border-white/5 bg-zinc-950/40 backdrop-blur-md">
-            <img
+            <Image
               src={drop.imageUrl}
               alt={drop.title}
               className="object-cover w-full aspect-square"
+              width={600}
+              height={600}
+              unoptimized
             />
           </div>
         </div>

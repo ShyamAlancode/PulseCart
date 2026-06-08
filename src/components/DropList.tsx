@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getDropsByStatus } from "@/lib/queries";
 import { docClient, TABLE_NAME } from "@/lib/dynamodb";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
@@ -110,10 +111,13 @@ export default async function DropList() {
               <div>
                 {/* Card Image Cover */}
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-150 dark:bg-zinc-950">
-                  <img
+                  <Image
                     src={drop.imageUrl}
                     alt={drop.title}
                     className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                    width={400}
+                    height={225}
+                    unoptimized
                   />
                   {/* Status Badges */}
                   <div className="absolute top-4 left-4 flex gap-2">

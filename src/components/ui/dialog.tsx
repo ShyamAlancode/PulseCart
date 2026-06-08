@@ -51,10 +51,10 @@ export function DialogTrigger({
   const { onOpenChange } = React.useContext(DialogContext);
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, {
+    const child = children as React.ReactElement<{ onClick?: (e: React.MouseEvent) => void }>;
+    return React.cloneElement(child, {
       onClick: (e: React.MouseEvent) => {
-        const childProps = (children as React.ReactElement<any>).props;
-        childProps.onClick?.(e);
+        child.props.onClick?.(e);
         onOpenChange(true);
       },
     });
@@ -117,13 +117,13 @@ export function DialogContent({ children }: { children: React.ReactNode }) {
 }
 
 export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className="flex flex-col space-y-2 text-center sm:text-left mb-6" {...props} />;
+  return <div className={`flex flex-col space-y-2 text-center sm:text-left mb-6 ${className || ""}`} {...props} />;
 }
 
 export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className="text-xl sm:text-2xl font-black leading-none tracking-tight text-white" {...props} />;
+  return <h2 className={`text-xl sm:text-2xl font-black leading-none tracking-tight text-white ${className || ""}`} {...props} />;
 }
 
 export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className="text-sm text-zinc-400" {...props} />;
+  return <p className={`text-sm text-zinc-400 ${className || ""}`} {...props} />;
 }

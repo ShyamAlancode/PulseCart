@@ -1,5 +1,5 @@
 // Ensure the DynamoDB client connects to the local development server
-(process.env as any).NODE_ENV = "development";
+(process.env as Record<string, string>).NODE_ENV = "development";
 
 // Constants
 const INVENTORY = 50;
@@ -37,11 +37,12 @@ async function runStressTest() {
   console.log("--------------------------------------------------");
 
   // 1. Generate 200 unique test user IDs
+  const runId = Math.random().toString(36).substring(2, 7);
   const userIds = Array.from({ length: CONCURRENT_REQUESTS }).map(
-    (_, i) => `user-test-${i + 1}`
+    (_, i) => `user-test-${runId}-${i + 1}`
   );
 
-  console.log(`Created ${CONCURRENT_REQUESTS} unique user IDs.`);
+  console.log(`Created ${CONCURRENT_REQUESTS} unique user IDs (Run ID: ${runId}).`);
   console.log("Firing checkout transaction requests simultaneously...");
 
   // 2. Fire requests concurrently using Promise.allSettled

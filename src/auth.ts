@@ -65,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!existingProfile.Item) {
-          const role = (user as any).role || (
+          const role = (user as { role?: string }).role || (
             user.email.includes("admin") || user.email.includes("judge")
               ? "ADMIN"
               : user.email.includes("seller")
@@ -95,14 +95,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role || "buyer";
+        token.role = (user as { role?: string }).role || "buyer";
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as string;
+        const u = session.user as { id?: string; role?: string };
+        u.id = token.id as string;
+        u.role = token.role as string;
       }
       return session;
     },

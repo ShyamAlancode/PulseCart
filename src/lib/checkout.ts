@@ -92,9 +92,10 @@ export async function createOrder({
     try {
       await docClient.send(command);
       return { success: true, orderId };
-    } catch (error: any) {
-      if (error.name === "TransactionCanceledException") {
-        const reasons = error.CancellationReasons || [];
+    } catch (error) {
+      const err = error as Error & { CancellationReasons?: Array<{ Code?: string }> };
+      if (err.name === "TransactionCanceledException") {
+        const reasons = err.CancellationReasons || [];
         
         // Check for idempotency check failure first
         const idempotencyFailed = reasons[2]?.Code === "ConditionalCheckFailed";
@@ -118,7 +119,7 @@ export async function createOrder({
       return {
         success: false,
         reason: "ERROR",
-        error: error.message || "An unknown error occurred during transaction execution.",
+        error: err.message || "An unknown error occurred during transaction execution.",
       };
     }
   }

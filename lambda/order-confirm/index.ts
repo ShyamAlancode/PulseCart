@@ -51,7 +51,7 @@ export const handler: Handler<DynamoDBStreamEvent, { statusCode: number; body: s
       }
 
       // 2. Unmarshall DynamoDB JSON to standard JavaScript attributes
-      const item = unmarshall(newImageRaw as any);
+      const item = unmarshall(newImageRaw as Record<string, import("@aws-sdk/client-dynamodb").AttributeValue>);
 
       // 3. Filter for only ORDER# items (check that the SK starts with "ORDER#")
       if (!item.SK || typeof item.SK !== "string" || !item.SK.startsWith("ORDER#")) {
@@ -113,7 +113,7 @@ export const handler: Handler<DynamoDBStreamEvent, { statusCode: number; body: s
       await ses.send(new SendEmailCommand(emailParams));
       console.log(`[StreamProcessor] Confirmation email sent successfully for OrderId: ${orderId}`);
       processedCount++;
-    } catch (err: any) {
+    } catch (err) {
       console.error(`[StreamProcessor] Failed to process stream record (Event ID: ${record.eventID}):`, err);
     }
   }
