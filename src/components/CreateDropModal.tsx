@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
-import { PlusCircle, Loader2, Sparkles, AlertCircle, CheckCircle } from "lucide-react";
+import { PlusCircle, Loader2, Sparkles, AlertCircle, CheckCircle, Upload, X } from "lucide-react";
 
 export default function CreateDropModal() {
   const router = useRouter();
@@ -19,6 +19,81 @@ export default function CreateDropModal() {
   const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+
+  // Upload States
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select a valid image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image size must be less than 5MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const queryParams = new URLSearchParams({
+        filename: file.name,
+        contentType: file.type,
+      });
+      const configRes = await fetch(`/api/upload?${queryParams.toString()}`);
+      if (!configRes.ok) {
+        throw new Error("Failed to initialize upload session.");
+      }
+
+      const configData = await configRes.json();
+
+      if (configData.localFallback) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image to local server.");
+        }
+
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          setImageUrl(uploadData.url);
+        } else {
+          throw new Error(uploadData.error || "Upload failed");
+        }
+      } else {
+        const uploadRes = await fetch(configData.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type,
+          },
+          body: file,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image to storage bucket.");
+        }
+
+        setImageUrl(configData.publicUrl);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setUploadError(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -94,6 +169,8 @@ export default function CreateDropModal() {
       setImageUrl("");
       setStartTime("");
       setEndTime("");
+      setUploadError(null);
+      setIsUploading(false);
 
       setOpen(false);
       router.refresh();
@@ -229,17 +306,78 @@ export default function CreateDropModal() {
                 />
               </div>
 
-              {/* Image URL */}
-              <div className="space-y-1 sm:col-span-2">
-                <label className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Image URL</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://images.unsplash.com/..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none transition-colors"
-                />
+              {/* Image URL & File Upload */}
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Product Image</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* File Upload Zone */}
+                  <div className="relative group border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 rounded-xl p-4 flex flex-col items-center justify-center text-center transition-colors min-h-[120px]">
+                    {isUploading ? (
+                      <div className="flex flex-col items-center space-y-2">
+                        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+                        <span className="text-xs text-zinc-400 font-medium">Uploading image...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-zinc-500 group-hover:text-zinc-400 mb-2 transition-colors" />
+                        <span className="text-xs text-zinc-300 font-semibold mb-1">Upload image file</span>
+                        <span className="text-[10px] text-zinc-500">Drag & drop or click to browse (Max 5MB)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* URL Input and Preview */}
+                  <div className="flex flex-col justify-between gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider block">Or Paste URL</span>
+                      <input
+                        type="url"
+                        required
+                        placeholder="https://images.unsplash.com/..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    {/* Preview Image */}
+                    {imageUrl && (
+                      <div className="relative h-16 w-full rounded-xl overflow-hidden border border-zinc-800/80 bg-zinc-950 flex items-center justify-between px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrl}
+                            alt="Preview"
+                            className="h-10 w-10 object-cover rounded-lg border border-zinc-800"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+                            }}
+                          />
+                          <div className="flex flex-col truncate max-w-[140px]">
+                            <span className="text-[10px] text-zinc-300 font-semibold truncate">Image Selected</span>
+                            <span className="text-[9px] text-zinc-500 truncate font-mono">{imageUrl}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setImageUrl("")}
+                          className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {uploadError && (
+                  <span className="text-[10px] text-red-400 font-semibold block mt-1">{uploadError}</span>
+                )}
               </div>
 
               {/* Start Time */}

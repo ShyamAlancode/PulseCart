@@ -16,23 +16,70 @@ export default function LiveInventory({
   const prevCount = useRef(count);
 
   useEffect(() => {
-    const fetchInventory = async () => {
+    let eventSource: EventSource | null = null;
+    let fallbackInterval: NodeJS.Timeout | null = null;
+
+    const setupSSE = () => {
       try {
-        const res = await fetch(`/api/drops/${dropId}/inventory`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.availableCount !== undefined && data.availableCount !== count) {
-            setCount(data.availableCount);
+        eventSource = new EventSource(`/api/drops/${dropId}/live`);
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.availableCount !== undefined) {
+              setCount(data.availableCount);
+            }
+          } catch (err) {
+            console.error("Error parsing live inventory SSE message:", err);
           }
-        }
+        };
+
+        eventSource.onerror = (err) => {
+          console.error("SSE connection error, falling back to polling:", err);
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          if (!fallbackInterval) {
+            startPollingFallback();
+          }
+        };
       } catch (err) {
-        console.error("Failed to fetch live inventory:", err);
+        console.error("Failed to establish SSE stream:", err);
+        startPollingFallback();
       }
     };
 
-    const interval = setInterval(fetchInventory, 3000);
-    return () => clearInterval(interval);
-  }, [dropId, count]);
+    const startPollingFallback = () => {
+      const fetchInventory = async () => {
+        try {
+          const res = await fetch(`/api/drops/${dropId}/inventory`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.availableCount !== undefined) {
+              setCount(data.availableCount);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch inventory fallback:", err);
+        }
+      };
+
+      fetchInventory();
+      fallbackInterval = setInterval(fetchInventory, 3000);
+    };
+
+    setupSSE();
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
+    };
+  }, [dropId]);
 
   useEffect(() => {
     const prev = prevCount.current;

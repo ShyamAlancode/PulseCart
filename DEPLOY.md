@@ -97,6 +97,28 @@ To allow Vercel to securely communicate with DynamoDB without hardcoding AWS Acc
    ```
 7. Click **Update policy** and copy the **Role ARN** (you will need it for Vercel).
 
+### E. Create the Product Image S3 Bucket and Add S3 permissions
+1. Open the [AWS S3 Console](https://console.aws.amazon.com/s3/).
+2. Click **Create bucket**:
+   - **Bucket name**: `pulsecart-product-images-<unique-suffix>` (S3 bucket names must be globally unique).
+   - **AWS Region**: Match the region of your DynamoDB table (e.g., `us-east-1`).
+   - Keep other settings at their defaults and click **Create bucket**.
+3. Open the created bucket, go to the **Permissions** tab.
+4. Set up CORS configuration to allow secure direct client uploads:
+   ```json
+   [
+     {
+       "AllowedHeaders": ["*"],
+       "AllowedMethods": ["PUT"],
+       "AllowedOrigins": ["https://*.vercel.app", "http://localhost:3000"],
+       "ExposeHeaders": []
+     }
+   ]
+   ```
+5. Attach S3 write/read permissions to the Vercel OIDC deployment role:
+   - Open the **PulseCart-VercelDeploymentRole** role in the AWS IAM Console.
+   - Attach the **AmazonS3FullAccess** policy (or a scoped policy targeting the new S3 bucket).
+
 ---
 
 ## 2. Vercel Configuration
@@ -112,6 +134,7 @@ In your Vercel Project Dashboard, navigate to **Settings -> Environment Variable
 | `DYNAMODB_TABLE_NAME` | The name of your production DynamoDB table. | `PulseCart` |
 | `AWS_REGION` | The region where your database is deployed. | `us-east-1` |
 | `AWS_ROLE_ARN` | The ARN of the IAM OIDC Role created in Step 1D. | `arn:aws:iam::1234567890:role/...` |
+| `S3_BUCKET_NAME` | S3 bucket name for uploads. (If omitted, uploads fall back to public/uploads). | `pulsecart-product-images` |
 
 ### B. Add DynamoDB Integration
 Alternatively, you can navigate to the **Vercel Marketplace**, search for **Amazon DynamoDB**, and click **Add Integration** to link Vercel to your AWS account. This will automatically configure the required permissions.
