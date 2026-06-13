@@ -48,3 +48,4 @@ next-env.d.ts
 /dynamodb_local/
 /dynamodb-local-metadata.json
 
+.vercel
