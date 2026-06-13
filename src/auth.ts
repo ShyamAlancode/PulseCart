@@ -20,19 +20,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         name: { label: "Name", type: "text" },
+        passcode: { label: "Passcode (Required for Admin/Seller)", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email) return null;
         
         const emailStr = credentials.email as string;
         const nameStr = (credentials.name as string) || "Guest Judge";
+        const passcodeStr = (credentials.passcode as string) || "";
         
-        // Deterministic role allocation based on email string
-        const role = emailStr.includes("admin") || emailStr.includes("judge")
-          ? "ADMIN"
-          : emailStr.includes("seller")
-          ? "seller"
-          : "buyer";
+        let role = "buyer";
+        const isAdminOrJudge = emailStr.includes("admin") || emailStr.includes("judge");
+        const isSeller = emailStr.includes("seller");
+
+        if (isAdminOrJudge || isSeller) {
+          const correctPasscode = process.env.JUDGE_PASSCODE || "pulse-judge-2026";
+          if (passcodeStr !== correctPasscode) {
+            // Explicit failure — surfaces as a sign-in error in the UI instead of silently demoting
+            return null;
+          }
+          role = isAdminOrJudge ? "ADMIN" : "seller";
+        }
         
         return {
           id: emailStr.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase(),

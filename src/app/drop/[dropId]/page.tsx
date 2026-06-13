@@ -50,16 +50,7 @@ async function getDropInventory(dropId: string) {
   }
 }
 
-// Seeded viewers count to make social proof dynamic and realistic for different drops
-function getSeededViewers(dropId: string): number {
-  let hash = 0;
-  for (let i = 0; i < dropId.length; i++) {
-    hash = dropId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const min = 18;
-  const max = 47;
-  return min + (Math.abs(hash) % (max - min + 1));
-}
+
 
 interface DropDetailsPageProps {
   params: Promise<{ dropId: string }>;
@@ -203,19 +194,7 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
               </div>
             )}
 
-            {/* Social proof ticker */}
-            {isLive && !isSoldOut && (
-              <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-semibold pt-1">
-                <span className="flex -space-x-1 select-none">
-                  {['bg-violet-500','bg-pink-500','bg-amber-500','bg-emerald-500'].map((c,i) => (
-                    <span key={i} className={`w-3.5 h-3.5 rounded-full border border-zinc-950 ${c}`} />
-                  ))}
-                </span>
-                <span>
-                  <span className="text-zinc-300 font-bold">{getSeededViewers(dropId)}</span> people viewing this drop right now
-                </span>
-              </div>
-            )}
+
 
             {/* Countdown Banner */}
             <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">

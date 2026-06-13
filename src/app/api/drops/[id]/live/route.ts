@@ -1,6 +1,8 @@
 import { docClient, TABLE_NAME } from "@/lib/dynamodb";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 
+export const runtime = "nodejs"; // Edge not viable — @vercel/functions/oidc is Node.js-only
+export const maxDuration = 300;  // TODO: evaluate Edge runtime migration post-hackathon
 export const dynamic = "force-dynamic";
 
 /**

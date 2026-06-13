@@ -73,7 +73,7 @@ npm install
 Create a `.env.local` file at the project root:
 ```env
 # NextAuth Settings
-AUTH_SECRET=921eef00c7333a39e83cfebec93a8d9a # Generate using `openssl rand -hex 32`
+AUTH_SECRET=<generate with: openssl rand -hex 32>
 NEXTAUTH_URL=http://localhost:3000
 
 # Sandbox Credentials for Testing (Google OAuth is optional locally)
@@ -83,7 +83,15 @@ GOOGLE_CLIENT_SECRET=dummy-client-secret
 # AWS Config for Local Development
 AWS_REGION=localhost
 DYNAMODB_TABLE_NAME=PulseCart
+
+# Sandbox Judge Passcode — required for Admin/Seller credentials login
+# Set the same value in Vercel env vars for production.
+# NEXT_PUBLIC_ prefix makes this available client-side (intentional — see note below).
+JUDGE_PASSCODE=pulse-judge-2026
+NEXT_PUBLIC_JUDGE_PASSCODE=pulse-judge-2026
 ```
+
+> **Sandbox Access Note**: The `NEXT_PUBLIC_JUDGE_PASSCODE` variable is intentionally bundled into client-side JS and visible in DevTools. This is a deliberate design choice for judge convenience during hackathon evaluation — it is not intended as a real security boundary. Quick-access sandbox buttons on the sign-in page use this value automatically.
 
 ### 5. Seed the Database
 Deploy the tables and seed test drops locally:

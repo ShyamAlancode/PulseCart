@@ -8,6 +8,7 @@ export default function SignInPage() {
   const [loadingType, setLoadingType] = useState<string | null>(null);
   const [customEmail, setCustomEmail] = useState("");
   const [customName, setCustomName] = useState("");
+  const [customPasscode, setCustomPasscode] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleOAuthSignIn = async () => {
@@ -31,6 +32,9 @@ export default function SignInPage() {
       const result = await signIn("credentials", {
         email,
         name,
+        // Read from env var so the literal passcode is never committed to source code.
+        // NEXT_PUBLIC_JUDGE_PASSCODE is intentionally public (bundled in client JS) for judge convenience.
+        passcode: process.env.NEXT_PUBLIC_JUDGE_PASSCODE || "",
         redirect: true,
         callbackUrl,
       }) as unknown as { error?: string } | undefined;
@@ -66,12 +70,13 @@ export default function SignInPage() {
       const result = await signIn("credentials", {
         email: customEmail,
         name: customName || "Custom User",
+        passcode: customPasscode,
         redirect: true,
         callbackUrl,
       }) as unknown as { error?: string } | undefined;
 
       if (result?.error) {
-        setErrorMsg("Authentication failed. Please verify fields.");
+        setErrorMsg("Authentication failed. Please verify your email and passcode.");
         setLoadingType(null);
       }
     } catch {
@@ -267,6 +272,31 @@ export default function SignInPage() {
               />
             </div>
           </div>
+
+          {/* Passcode — required for Admin/Seller emails */}
+          {(customEmail.includes("admin") || customEmail.includes("judge") || customEmail.includes("seller")) && (
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5 uppercase tracking-wide">
+                Passcode <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
+                  <Lock className="w-4 h-4" />
+                </span>
+                <input
+                  type="password"
+                  placeholder="Enter judge/admin passcode"
+                  value={customPasscode}
+                  onChange={(e) => setCustomPasscode(e.target.value)}
+                  disabled={loadingType !== null}
+                  className="w-full pl-10 pr-4 py-2 bg-zinc-950/80 border border-zinc-800 focus:border-purple-500/60 focus:ring-1 focus:ring-purple-500/30 rounded-xl text-sm transition-all outline-none"
+                />
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">
+                Provided in Devpost testing instructions.
+              </p>
+            </div>
+          )}
 
           <button
             type="submit"

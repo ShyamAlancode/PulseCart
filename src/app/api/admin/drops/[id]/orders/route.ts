@@ -1,12 +1,24 @@
 import { NextResponse } from "next/server";
 import { docClient, TABLE_NAME } from "@/lib/dynamodb";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { auth } from "@/auth";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // --- Auth Guard: session + role check ---
+    const session = await auth();
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userRole = (session.user as { role?: string }).role;
+    if (userRole !== "ADMIN" && userRole !== "seller") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    // ----------------------------------------
+
     const { id: dropId } = await params;
 
     if (!dropId) {
