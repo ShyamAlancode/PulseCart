@@ -49,3 +49,6 @@ next-env.d.ts
 /dynamodb-local-metadata.json
 
 .vercel
+
+# Lambda packages
+/lambda/order-confirm/lambda.zip
