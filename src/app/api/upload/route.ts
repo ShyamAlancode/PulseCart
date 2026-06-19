@@ -28,8 +28,9 @@ const s3Client = isDev
 export async function GET(request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = session?.user as { id?: string; role?: string } | undefined;
+    if (!user || (user.role !== "seller" && user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "Forbidden", message: "Only creators and admins can upload media." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -78,8 +79,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = session?.user as { id?: string; role?: string } | undefined;
+    if (!user || (user.role !== "seller" && user.role !== "ADMIN")) {
+      return NextResponse.json({ error: "Forbidden", message: "Only creators and admins can upload media." }, { status: 403 });
     }
 
     const formData = await request.formData();

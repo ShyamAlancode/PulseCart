@@ -3,9 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { auth } from "@/auth";
-import { getSellerDrops, getDrop, getDropOrders } from "@/lib/queries";
-import { docClient, TABLE_NAME } from "@/lib/dynamodb";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getSellerDrops, getDrop, getDropOrders, getAggregatedInventory } from "@/lib/queries";
 import CreateDropModal from "@/components/CreateDropModal";
 import {
   Card,
@@ -18,40 +16,6 @@ import {
 import { Calendar, Layers, ShoppingBag, Tag } from "lucide-react";
 
 export const revalidate = 0;
-
-// Helper to query inventory without needing the generated productId
-async function getDropInventory(dropId: string) {
-  try {
-    const command = new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
-      ExpressionAttributeValues: {
-        ":pk": `DROP#${dropId}`,
-        ":sk": "INVENTORY#",
-      },
-    });
-    const response = await docClient.send(command);
-    const items = response.Items || [];
-    if (items.length === 0) return null;
-
-    const aggregated = {
-      availableCount: 0,
-      baseInventory: 0,
-      price: items[0].price || 0,
-      SK: items[0].SK,
-    };
-
-    for (const item of items) {
-      aggregated.availableCount += item.availableCount || 0;
-      aggregated.baseInventory += item.baseInventory || 0;
-    }
-
-    return aggregated;
-  } catch (error) {
-    console.error(`Error querying inventory for drop ${dropId} on dashboard:`, error);
-    return null;
-  }
-}
 
 export default async function SellerDashboardPage() {
   // 1. Authenticate user
@@ -87,7 +51,7 @@ export default async function SellerDashboardPage() {
 
       const [metadata, inventory, orders] = await Promise.all([
         getDrop(dropId),
-        getDropInventory(dropId),
+        getAggregatedInventory(dropId),
         getDropOrders(dropId),
       ]);
 

@@ -62,6 +62,13 @@ export async function getDrop(dropId: string): Promise<DropMetadata | null> {
   }
 }
 
+export interface AggregatedInventory {
+  availableCount: number;
+  baseInventory: number;
+  price: number;
+  SK: string;
+}
+
 /**
  * 2. getInventory: Fetches inventory status for a specific product in a drop
  */
@@ -100,6 +107,45 @@ export async function getInventory(
     };
   } catch (error) {
     console.error(`Error in getInventory for dropId ${dropId}, productId ${productId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 2.5. getAggregatedInventory: Fetches and aggregates inventory status across all shards for a drop
+ */
+export async function getAggregatedInventory(
+  dropId: string
+): Promise<AggregatedInventory | null> {
+  const command = new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+    ExpressionAttributeValues: {
+      ":pk": `DROP#${dropId}`,
+      ":sk": "INVENTORY#",
+    },
+  });
+
+  try {
+    const response = await docClient.send(command);
+    const items = response.Items || [];
+    if (items.length === 0) return null;
+
+    const aggregated = {
+      availableCount: 0,
+      baseInventory: 0,
+      price: items[0].price || 0,
+      SK: items[0].SK,
+    };
+
+    for (const item of items) {
+      aggregated.availableCount += item.availableCount || 0;
+      aggregated.baseInventory += item.baseInventory || 0;
+    }
+
+    return aggregated;
+  } catch (error) {
+    console.error(`Error in getAggregatedInventory for dropId ${dropId}:`, error);
     return null;
   }
 }

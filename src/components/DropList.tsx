@@ -1,9 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getDropsByStatus } from "@/lib/queries";
-import { docClient, TABLE_NAME } from "@/lib/dynamodb";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getDropsByStatus, getAggregatedInventory } from "@/lib/queries";
 import CountdownTimer from "@/components/CountdownTimer";
 import {
   Card,
@@ -12,40 +10,6 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-
-// Helper to query inventory without needing the generated productId
-async function getDropInventory(dropId: string) {
-  try {
-    const command = new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
-      ExpressionAttributeValues: {
-        ":pk": `DROP#${dropId}`,
-        ":sk": "INVENTORY#",
-      },
-    });
-    const response = await docClient.send(command);
-    const items = response.Items || [];
-    if (items.length === 0) return null;
-
-    const aggregated = {
-      availableCount: 0,
-      baseInventory: 0,
-      price: items[0].price || 0,
-      SK: items[0].SK,
-    };
-
-    for (const item of items) {
-      aggregated.availableCount += item.availableCount || 0;
-      aggregated.baseInventory += item.baseInventory || 0;
-    }
-
-    return aggregated;
-  } catch (error) {
-    console.error(`Error querying inventory for drop ${dropId}:`, error);
-    return null;
-  }
-}
 
 export default async function DropList() {
   // 1. Fetch drops by status
@@ -59,7 +23,7 @@ export default async function DropList() {
   const drops = await Promise.all(
     allDropsRaw.map(async (drop) => {
       const dropId = drop.PK.split("#")[1];
-      const inventory = await getDropInventory(dropId);
+      const inventory = await getAggregatedInventory(dropId);
 
       return {
         id: dropId,

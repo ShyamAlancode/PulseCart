@@ -1,9 +1,7 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getDrop } from "@/lib/queries";
-import { docClient, TABLE_NAME } from "@/lib/dynamodb";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getDrop, getAggregatedInventory } from "@/lib/queries";
 import CountdownTimer from "@/components/CountdownTimer";
 import LiveInventory from "@/components/LiveInventory";
 import InventorySkeleton from "@/components/InventorySkeleton";
@@ -15,42 +13,6 @@ import {
 } from "@/components/ui/card";
 
 export const revalidate = 0;
-
-// Helper to query inventory without needing the generated productId
-async function getDropInventory(dropId: string) {
-  try {
-    const command = new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
-      ExpressionAttributeValues: {
-        ":pk": `DROP#${dropId}`,
-        ":sk": "INVENTORY#",
-      },
-    });
-    const response = await docClient.send(command);
-    const items = response.Items || [];
-    if (items.length === 0) return null;
-
-    const aggregated = {
-      availableCount: 0,
-      baseInventory: 0,
-      price: items[0].price || 0,
-      SK: items[0].SK,
-    };
-
-    for (const item of items) {
-      aggregated.availableCount += item.availableCount || 0;
-      aggregated.baseInventory += item.baseInventory || 0;
-    }
-
-    return aggregated;
-  } catch (error) {
-    console.error(`Error querying inventory in drop page:`, error);
-    return null;
-  }
-}
-
-
 
 interface DropDetailsPageProps {
   params: Promise<{ dropId: string }>;
@@ -74,7 +36,7 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
   }
 
   // 2. Fetch drop inventory
-  const inventoryItem = await getDropInventory(dropId);
+  const inventoryItem = await getAggregatedInventory(dropId);
   const productId = inventoryItem ? inventoryItem.SK.split("#")[1] : "product-001";
   const price = inventoryItem ? inventoryItem.price : 0;
   const availableCount = inventoryItem ? inventoryItem.availableCount : 0;
