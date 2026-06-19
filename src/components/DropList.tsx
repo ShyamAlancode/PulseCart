@@ -25,6 +25,18 @@ export default async function DropList() {
       const dropId = drop.PK.split("#")[1];
       const inventory = await getAggregatedInventory(dropId);
 
+      const now = new Date();
+      const start = new Date(drop.startTime);
+      const end = new Date(drop.endTime);
+      let calculatedStatus = drop.status;
+      if (end < now) {
+        calculatedStatus = "ENDED";
+      } else if (start <= now && end >= now) {
+        calculatedStatus = "ACTIVE";
+      } else {
+        calculatedStatus = "SCHEDULED";
+      }
+
       return {
         id: dropId,
         title: drop.title,
@@ -32,7 +44,7 @@ export default async function DropList() {
         startTime: drop.startTime,
         endTime: drop.endTime,
         imageUrl: drop.imageUrl,
-        status: drop.status,
+        status: calculatedStatus,
         price: inventory ? inventory.price : 0,
         availableCount: inventory ? inventory.availableCount : 0,
       };

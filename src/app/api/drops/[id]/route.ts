@@ -39,6 +39,18 @@ export async function GET(
     const price = inventoryItems[0] ? inventoryItems[0].price : 0;
     const availableCount = inventoryItems.reduce((sum, item) => sum + (item.availableCount || 0), 0);
 
+    const now = new Date();
+    const start = new Date(metadataItem.startTime);
+    const end = new Date(metadataItem.endTime);
+    let calculatedStatus = metadataItem.status;
+    if (end < now) {
+      calculatedStatus = "ENDED";
+    } else if (start <= now && end >= now) {
+      calculatedStatus = "ACTIVE";
+    } else {
+      calculatedStatus = "SCHEDULED";
+    }
+
     // Merge metadata details and inventory status
     const dropData = {
       id: dropId,
@@ -48,7 +60,7 @@ export async function GET(
       imageUrl: metadataItem.imageUrl,
       startTime: metadataItem.startTime,
       endTime: metadataItem.endTime,
-      status: metadataItem.status,
+      status: calculatedStatus,
       totalStock: metadataItem.totalStock,
       availableCount,
     };

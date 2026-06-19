@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
     "seed": "npx tsx scripts/seed.ts",
     "stress": "npx tsx scripts/seed.ts --reset && npx tsx scripts/stress-test.ts"
   },

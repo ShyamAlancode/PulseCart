@@ -92,7 +92,10 @@ export default async function AdminLandingPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allDrops.map((drop) => {
-            const isLive = drop.status === "ACTIVE";
+            const now = new Date();
+            const start = new Date(drop.startTime);
+            const end = new Date(drop.endTime);
+            const isLive = start <= now && end >= now;
             const formattedStart = drop.startTime
               ? new Date(drop.startTime).toLocaleString("en-IN", {
                   dateStyle: "medium",
