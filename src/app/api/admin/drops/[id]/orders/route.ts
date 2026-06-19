@@ -25,6 +25,21 @@ export async function GET(
       return NextResponse.json({ error: "Missing dropId" }, { status: 400 });
     }
 
+    // Retrieve drop metadata to perform ownership check
+    const { getDrop } = await import("@/lib/queries");
+    const drop = await getDrop(dropId);
+    if (!drop) {
+      return NextResponse.json({ error: "Not Found", message: "Drop not found" }, { status: 404 });
+    }
+
+    // If caller is seller, verify they own the drop
+    if (userRole === "seller") {
+      const sessionUserId = (session.user as { id?: string }).id;
+      if (sessionUserId !== drop.sellerId) {
+        return NextResponse.json({ error: "Forbidden", message: "Access denied: You do not own this drop." }, { status: 403 });
+      }
+    }
+
     // Query GSI1 for all order records belonging to this drop
     const command = new QueryCommand({
       TableName: TABLE_NAME,

@@ -75,7 +75,13 @@ export default async function DropList() {
     })
   );
 
-  if (drops.length === 0) {
+  const now = new Date();
+  const filteredDrops = drops.filter((drop) => {
+    if (!drop.endTime) return true;
+    return new Date(drop.endTime) >= now;
+  });
+
+  if (filteredDrops.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-zinc-100/30 dark:bg-zinc-950/40 backdrop-blur-md space-y-4">
         <svg
@@ -101,7 +107,7 @@ export default async function DropList() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {drops.map((drop) => {
+      {filteredDrops.map((drop) => {
         const isLive = drop.status === "ACTIVE";
         const targetTime = isLive ? drop.endTime : drop.startTime;
 

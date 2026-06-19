@@ -338,9 +338,9 @@ export default function AdminDropPage({
             </div>
           </div>
           <div>
-            <div className="text-3xl font-black text-white">${totalRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-black text-white">₹{(totalRevenue / 100).toFixed(2)}</div>
             <div className="text-[10px] text-gray-500 font-mono mt-1">
-              Price per item: ${drop.price.toFixed(2)}
+              Price per item: ₹{(drop.price / 100).toFixed(2)}
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function AdminDropPage({
                         </span>
                       </td>
                       <td className="p-4 pr-6 text-right font-bold text-white font-mono">
-                        ${order.total.toFixed(2)}
+                        ₹{(order.total / 100).toFixed(2)}
                       </td>
                     </tr>
                   );
