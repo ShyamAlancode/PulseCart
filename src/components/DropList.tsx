@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getDropsByStatus, getAggregatedInventory } from "@/lib/queries";
+import { getAllDrops, getAggregatedInventory } from "@/lib/queries";
 import CountdownTimer from "@/components/CountdownTimer";
 import {
   Card,
@@ -12,12 +12,8 @@ import {
 } from "@/components/ui/card";
 
 export default async function DropList() {
-  // 1. Fetch drops by status
-  const activeDrops = await getDropsByStatus("ACTIVE");
-  const scheduledDrops = await getDropsByStatus("SCHEDULED");
-  
-  // Combine all active and scheduled drops
-  const allDropsRaw = [...activeDrops, ...scheduledDrops];
+  // 1. Fetch all drops
+  const allDropsRaw = await getAllDrops();
 
   // 2. Fetch inventory and price details for each drop concurrently
   const drops = await Promise.all(

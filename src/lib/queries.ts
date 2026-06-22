@@ -151,15 +151,15 @@ export async function getAggregatedInventory(
 }
 
 /**
- * 3. getDropsByStatus: Query GSI2 using status attribute as key
+ * 3. getAllDrops: Query GSI2 using a static "DROP" key to retrieve all drops, sorted chronologically by startTime (GSI2SK)
  */
-export async function getDropsByStatus(status: string): Promise<DropMetadata[]> {
+export async function getAllDrops(): Promise<DropMetadata[]> {
   const command = new QueryCommand({
     TableName: TABLE_NAME,
     IndexName: "GSI2",
     KeyConditionExpression: "GSI2PK = :gsi2pk",
     ExpressionAttributeValues: {
-      ":gsi2pk": status,
+      ":gsi2pk": "DROP",
     },
   });
 
@@ -167,7 +167,7 @@ export async function getDropsByStatus(status: string): Promise<DropMetadata[]> 
     const response = await docClient.send(command);
     return (response.Items as DropMetadata[]) || [];
   } catch (error) {
-    console.error(`Error in getDropsByStatus for status ${status}:`, error);
+    console.error("Error in getAllDrops:", error);
     return [];
   }
 }

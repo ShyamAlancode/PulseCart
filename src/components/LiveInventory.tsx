@@ -23,6 +23,14 @@ export default function LiveInventory({
       try {
         eventSource = new EventSource(`/api/drops/${dropId}/live`);
 
+        eventSource.onopen = () => {
+          console.log("SSE connection established/reconnected. Stopping polling fallback.");
+          if (fallbackInterval) {
+            clearInterval(fallbackInterval);
+            fallbackInterval = null;
+          }
+        };
+
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -35,17 +43,13 @@ export default function LiveInventory({
         };
 
         eventSource.onerror = (err) => {
-          console.error("SSE connection error, falling back to polling:", err);
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-          }
+          console.error("SSE connection error. Initiating polling fallback while browser attempts reconnection:", err);
           if (!fallbackInterval) {
             startPollingFallback();
           }
         };
       } catch (err) {
-        console.error("Failed to establish SSE stream:", err);
+        console.error("Failed to establish SSE stream, starting polling fallback:", err);
         startPollingFallback();
       }
     };

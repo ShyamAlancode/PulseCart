@@ -143,7 +143,7 @@ async function main() {
               sellerId: "seller-001",
               status: "SCHEDULED",
               totalStock: 50,
-              GSI2PK: "SCHEDULED",
+              GSI2PK: "DROP",
               GSI2SK: startTime,
             },
           },

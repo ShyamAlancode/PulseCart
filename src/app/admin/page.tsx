@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getDropsByStatus } from "@/lib/queries";
+import { getAllDrops } from "@/lib/queries";
 import { 
   Shield, 
   ArrowRight, 
@@ -44,13 +44,8 @@ export default async function AdminLandingPage() {
     );
   }
 
-  // 2. Fetch drops across all statuses
-  const [activeDrops, scheduledDrops] = await Promise.all([
-    getDropsByStatus("ACTIVE"),
-    getDropsByStatus("SCHEDULED"),
-  ]);
-
-  const allDrops = [...activeDrops, ...scheduledDrops];
+  // 2. Fetch all drops
+  const allDrops = await getAllDrops();
 
   return (
     <div className="space-y-8 py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-zinc-100 min-h-screen">

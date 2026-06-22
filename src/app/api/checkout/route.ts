@@ -39,7 +39,15 @@ export async function POST(request: Request) {
     // 4. Execute checkout transaction
     const { getInventory } = await import("@/lib/queries");
     const inventory = await getInventory(dropId, productId);
-    const price = inventory?.price ?? 0;
+    
+    if (!inventory) {
+      return NextResponse.json(
+        { error: "Not Found", message: "Product or drop not found." },
+        { status: 404 }
+      );
+    }
+    
+    const price = inventory.price;
 
     const result = await createOrder({
       dropId,

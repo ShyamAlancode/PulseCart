@@ -102,9 +102,25 @@ To allow Vercel to securely communicate with DynamoDB without hardcoding AWS Acc
 2. Click **Create bucket**:
    - **Bucket name**: `pulsecart-product-images-<unique-suffix>` (S3 bucket names must be globally unique).
    - **AWS Region**: Match the region of your DynamoDB table (e.g., `us-east-1`).
-   - Keep other settings at their defaults and click **Create bucket**.
+   - Under **Block Public Access settings for this bucket**, uncheck **Block *all* public access** and acknowledge the warning checkbox (required to allow public GET requests for product images).
+   - Click **Create bucket**.
 3. Open the created bucket, go to the **Permissions** tab.
-4. Set up CORS configuration to allow secure direct client uploads:
+4. Add a **Bucket policy** to allow public anonymous read access to the uploaded product images (replace `<your-bucket-name>` with your actual bucket name):
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "PublicReadGetObject",
+         "Effect": "Allow",
+         "Principal": "*",
+         "Action": "s3:GetObject",
+         "Resource": "arn:aws:s3:::<your-bucket-name>/uploads/*"
+       }
+     ]
+   }
+   ```
+5. Set up CORS configuration to allow secure direct client uploads:
    ```json
    [
      {
@@ -115,7 +131,7 @@ To allow Vercel to securely communicate with DynamoDB without hardcoding AWS Acc
      }
    ]
    ```
-5. Attach S3 write/read permissions to the Vercel OIDC deployment role:
+6. Attach S3 write/read permissions to the Vercel OIDC deployment role:
    - Open the **PulseCart-VercelDeploymentRole** role in the AWS IAM Console.
    - Attach the **AmazonS3FullAccess** policy (or a scoped policy targeting the new S3 bucket).
 
