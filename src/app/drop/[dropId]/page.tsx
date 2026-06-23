@@ -97,11 +97,12 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
           <Card className="p-6 space-y-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-zinc-500 font-mono text-[10px] tracking-widest uppercase">
-                  Product Drop ID: {dropId}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 uppercase tracking-widest">
+                  ✦ Limited Edition Drop
                 </span>
                 {isLive && !isSoldOut && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 backdrop-blur-md uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                     LIVE
                   </span>
                 )}
@@ -186,6 +187,18 @@ export default async function DropDetailsPage({ params }: DropDetailsPageProps) 
                   disabled={!hasStarted || hasEnded}
                 />
               )}
+            </div>
+
+            {/* DynamoDB guarantee trust badge */}
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] text-zinc-500 text-center">
+                Zero-oversell guaranteed via{" "}
+                <span className="text-emerald-400 font-semibold">
+                  DynamoDB atomic transactions
+                </span>
+                {" "}— powered by AWS
+              </p>
             </div>
           </Card>
         </div>

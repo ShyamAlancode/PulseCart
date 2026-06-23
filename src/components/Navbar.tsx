@@ -41,6 +41,13 @@ export default function Navbar({ session }: NavbarProps) {
           >
             Home
           </Link>
+
+          <Link
+            href="/about"
+            className="text-sm font-semibold text-zinc-650 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+          >
+            How It Works
+          </Link>
           
           {user && (
             <Link
@@ -110,6 +117,14 @@ export default function Navbar({ session }: NavbarProps) {
             className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white py-2"
           >
             Home
+          </Link>
+
+          <Link
+            href="/about"
+            onClick={() => setIsOpen(false)}
+            className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white py-2"
+          >
+            How It Works
           </Link>
 
           {user && (

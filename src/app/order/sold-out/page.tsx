@@ -3,21 +3,41 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 export default function SoldOutPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    setLoading(true);
+    setError("");
 
-    // Log the waitlist signup to console as requested
-    console.log(`Waitlist signup submitted for email: ${email}`);
-    
-    setSubmitted(true);
-    setEmail("");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Failed to join waitlist. Please try again.");
+        return;
+      }
+
+      setSubmitted(true);
+      setEmail("");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShareFailure = async () => {
@@ -69,25 +89,33 @@ export default function SoldOutPage() {
           </p>
 
           {submitted ? (
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold text-center animate-pulse-glow">
-              🎉 Added to the waitlist successfully!
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold text-center">
+              🎉 You&apos;re on the waitlist! We&apos;ll notify you of future drops.
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="email"
-                required
-                placeholder="enter your email..."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none transition-colors"
-              />
-              <button
-                type="submit"
-                className="bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs px-4 py-2.5 rounded-xl transition-all active:scale-[0.98] select-none"
-              >
-                Join Waitlist
-              </button>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="enter your email..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none transition-colors disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-zinc-100 hover:bg-white text-zinc-950 font-bold text-xs px-4 py-2.5 rounded-xl transition-all active:scale-[0.98] select-none disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  {loading ? "Joining..." : "Join Waitlist"}
+                </button>
+              </div>
+              {error && (
+                <p className="text-xs text-red-400 font-medium">{error}</p>
+              )}
             </form>
           )}
         </div>
