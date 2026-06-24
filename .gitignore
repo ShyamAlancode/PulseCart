@@ -52,3 +52,5 @@ next-env.d.ts
 
 # Lambda packages
 /lambda/order-confirm/lambda.zip
+
+.vercel

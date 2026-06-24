@@ -6,6 +6,8 @@ import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
 
+import { awsCredentialsProvider } from "@vercel/oidc-aws-credentials-provider";
+
 const isDev = process.env.NODE_ENV === "development";
 const region = process.env.AWS_REGION || "us-east-1";
 const bucketName = process.env.S3_BUCKET_NAME;
@@ -19,7 +21,12 @@ const s3Client = isDev
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "fake",
       },
     })
-  : new S3Client({ region });
+  : new S3Client({
+      region,
+      credentials: awsCredentialsProvider({
+        roleArn: process.env.AWS_ROLE_ARN!,
+      }),
+    });
 
 /**
  * GET: Checks configuration. If S3 is active, returns a presigned URL.
